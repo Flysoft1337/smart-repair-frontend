@@ -1,21 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import RoleGuard from '@/components/RoleGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { apiUrl } from '@/lib/api';
-
-type AuditLog = {
-  id: number;
-  action: string;
-  ticketId: number | null;
-  actor: string;
-  role: string;
-  details: string | null;
-  createdAt: string;
-};
+import { clearAuthProfile, redirectToLogin } from '@/lib/auth';
+import { ApiError } from '@/lib/api';
+import { AuditLog, fetchAuditLogs } from '@/lib/services';
 
 export default function AuditPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -27,13 +19,58 @@ export default function AuditPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [queryInput, setQueryInput] = useState('');
   const [query, setQuery] = useState('');
+  const [ticketIdInput, setTicketIdInput] = useState('');
+  const [datePreset, setDatePreset] = useState<'all' | 'today' | '7d'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [copyingId, setCopyingId] = useState<number | null>(null);
 
   const actionOptions = useMemo(
     () => ['all', 'LOGIN', 'LOGOUT', 'CREATE_TICKET', 'UPDATE_STATUS', 'DELETE_TICKET', 'CLEAR_DONE', 'UPDATE_PRIORITY_MODE'],
     []
   );
+
+  const visibleLoginCount = useMemo(() => logs.filter((log) => log.action === 'LOGIN').length, [logs]);
+  const visibleMutationCount = useMemo(
+    () => logs.filter((log) => ['CREATE_TICKET', 'UPDATE_STATUS', 'DELETE_TICKET', 'CLEAR_DONE', 'UPDATE_PRIORITY_MODE'].includes(log.action)).length,
+    [logs]
+  );
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const now = new Date();
+      const from =
+        datePreset === 'today'
+          ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
+          : datePreset === '7d'
+            ? new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            : null;
+
+      const data = await fetchAuditLogs({
+        page,
+        limit,
+        action: actionFilter,
+        role: roleFilter,
+        q: query,
+        ticketId: ticketIdInput.trim() ? Number(ticketIdInput.trim()) : undefined,
+        from: from ? from.toISOString() : undefined,
+      });
+      setLogs(data.items ?? []);
+      setTotal(data.total ?? 0);
+      setTotalPages(data.totalPages ?? 1);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        clearAuthProfile();
+        redirectToLogin();
+        return;
+      }
+      setError('网络异常，无法获取审计日志');
+    } finally {
+      setLoading(false);
+    }
+  }, [actionFilter, datePreset, limit, page, query, roleFilter, ticketIdInput]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setQuery(queryInput.trim()), 300);
@@ -41,41 +78,46 @@ export default function AuditPage() {
   }, [queryInput]);
 
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const params = new URLSearchParams();
-        params.set('page', String(page));
-        params.set('limit', String(limit));
-        if (actionFilter !== 'all') params.set('action', actionFilter);
-        if (roleFilter !== 'all') params.set('role', roleFilter);
-        if (query) params.set('q', query);
-
-        const res = await fetch(`${apiUrl('/api/audit-logs')}?${params.toString()}`, {
-          credentials: 'include',
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setLogs(data.items ?? []);
-          setTotal(data.total ?? 0);
-          setTotalPages(data.totalPages ?? 1);
-        } else {
-          setError('加载失败，请稍后重试');
-        }
-      } catch {
-        setError('网络异常，无法获取审计日志');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     void load();
-  }, [actionFilter, limit, page, query, roleFilter]);
+  }, [load]);
+
+  const handleCopy = async (log: AuditLog) => {
+    const text = `${new Date(log.createdAt).toLocaleString('zh-CN')} | ${log.action} | ${log.actor} | ${log.role} | ${log.ticketId ?? '-'} | ${log.details ?? '-'}`;
+    await navigator.clipboard.writeText(text);
+    setCopyingId(log.id);
+    window.setTimeout(() => setCopyingId(null), 1200);
+  };
 
   useEffect(() => {
     setPage(1);
-  }, [actionFilter, roleFilter, query]);
+  }, [actionFilter, roleFilter, query, ticketIdInput, datePreset]);
+
+  const exportCurrentPageCsv = () => {
+    const headers = ['id', 'time', 'action', 'actor', 'role', 'ticketId', 'details'];
+    const rows = logs.map((log) => [
+      String(log.id),
+      new Date(log.createdAt).toISOString(),
+      log.action,
+      log.actor,
+      log.role,
+      log.ticketId ? String(log.ticketId) : '',
+      (log.details ?? '').replaceAll('"', '""'),
+    ]);
+    const csv = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit-page-${page}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <RoleGuard roles={['admin']}>
@@ -85,16 +127,37 @@ export default function AuditPage() {
           <p className="text-sm text-zinc-500 mt-2">记录登录、状态变更、删除等关键操作</p>
         </header>
 
+        <section className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4">
+            <p className="text-xs text-zinc-500">当前筛选命中</p>
+            <p className="mt-1 text-2xl font-bold text-zinc-100">{total}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4">
+            <p className="text-xs text-zinc-500">登录类操作</p>
+            <p className="mt-1 text-2xl font-bold text-indigo-300">{visibleLoginCount}</p>
+          </div>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4">
+            <p className="text-xs text-zinc-500">工单变更类操作</p>
+            <p className="mt-1 text-2xl font-bold text-emerald-300">{visibleMutationCount}</p>
+          </div>
+        </section>
+
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
             <CardTitle className="text-zinc-200">审计日志</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-5 gap-3">
               <Input
                 value={queryInput}
                 onChange={(e) => setQueryInput(e.target.value)}
                 placeholder="搜索操作/执行人/详情"
+                className="bg-zinc-950 border-zinc-700 text-zinc-100"
+              />
+              <Input
+                value={ticketIdInput}
+                onChange={(e) => setTicketIdInput(e.target.value)}
+                placeholder="工单ID (可选)"
                 className="bg-zinc-950 border-zinc-700 text-zinc-100"
               />
               <select
@@ -118,15 +181,39 @@ export default function AuditPage() {
                 <option value="worker">WORKER</option>
                 <option value="reporter">REPORTER</option>
               </select>
-              <div className="text-sm text-zinc-500 flex items-center justify-start md:justify-end">
-                共 {total} 条 | 第 {page}/{totalPages} 页
-              </div>
+              <select
+                value={datePreset}
+                onChange={(e) => setDatePreset(e.target.value as 'all' | 'today' | '7d')}
+                className="h-10 rounded-md bg-zinc-950 border border-zinc-700 px-3 text-sm text-zinc-200"
+              >
+                <option value="all">全部时间</option>
+                <option value="today">仅今天</option>
+                <option value="7d">近 7 天</option>
+              </select>
+            </div>
+
+            <div className="mb-4 flex items-center justify-between text-sm text-zinc-500">
+              <span>共 {total} 条 | 第 {page}/{totalPages} 页</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-zinc-700 bg-zinc-900 text-zinc-300"
+                disabled={logs.length === 0 || loading}
+                onClick={exportCurrentPageCsv}
+              >
+                导出本页 CSV
+              </Button>
             </div>
 
             {loading ? (
               <p className="text-zinc-500 text-sm">加载中...</p>
             ) : error ? (
-              <p className="text-red-400 text-sm">{error}</p>
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  <span>{error}</span>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-red-100 hover:bg-red-500/20" onClick={() => void load()}>
+                    重试
+                  </Button>
+                </div>
             ) : logs.length === 0 ? (
               <p className="text-zinc-500 text-sm">暂无审计日志</p>
             ) : (
@@ -148,11 +235,27 @@ export default function AuditPage() {
                         <td className="py-2 pr-3 whitespace-nowrap text-zinc-500">
                           {new Date(log.createdAt).toLocaleString('zh-CN')}
                         </td>
-                        <td className="py-2 pr-3 font-medium">{log.action}</td>
+                        <td className="py-2 pr-3 font-medium">
+                          <span className={`rounded px-2 py-0.5 text-xs ${log.action === 'LOGIN' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-zinc-800 text-zinc-200'}`}>
+                            {log.action}
+                          </span>
+                        </td>
                         <td className="py-2 pr-3">{log.actor}</td>
                         <td className="py-2 pr-3 uppercase text-xs text-zinc-400">{log.role}</td>
                         <td className="py-2 pr-3">{log.ticketId ?? '-'}</td>
-                        <td className="py-2">{log.details ?? '-'}</td>
+                        <td className="py-2">
+                          <div className="flex items-center gap-2">
+                            <span className="max-w-md truncate">{log.details ?? '-'}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+                              onClick={() => void handleCopy(log)}
+                            >
+                              {copyingId === log.id ? '已复制' : '复制'}
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

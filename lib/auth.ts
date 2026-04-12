@@ -1,6 +1,7 @@
-import { apiUrl } from '@/lib/api';
+import { apiJson } from '@/lib/api';
 
 export const AUTH_EVENT = 'auth_changed';
+const LOGIN_REDIRECT_KEY = 'sr_login_redirecting';
 
 export type Role = 'admin' | 'worker' | 'reporter';
 
@@ -24,6 +25,10 @@ function writeAuthProfile(role: Role, name: string) {
 function clearAuthProfileLocal() {
   localStorage.removeItem(ROLE_KEY);
   localStorage.removeItem(NAME_KEY);
+}
+
+function clearLoginRedirectLock() {
+  sessionStorage.removeItem(LOGIN_REDIRECT_KEY);
 }
 
 export function getAuthSnapshot(): AuthSnapshot {
@@ -53,28 +58,32 @@ export function getAuthSnapshot(): AuthSnapshot {
 
 export function saveAuthProfile(role: Role, name: string) {
   writeAuthProfile(role, name);
+  clearLoginRedirectLock();
   window.dispatchEvent(new Event(AUTH_EVENT));
 }
 
 export function clearAuthProfile() {
   clearAuthProfileLocal();
+  clearLoginRedirectLock();
   window.dispatchEvent(new Event(AUTH_EVENT));
+}
+
+export function redirectToLogin(force = false) {
+  if (typeof window === 'undefined') return;
+
+  if (window.location.pathname === '/login') return;
+  if (!force && sessionStorage.getItem(LOGIN_REDIRECT_KEY) === '1') return;
+
+  sessionStorage.setItem(LOGIN_REDIRECT_KEY, '1');
+  window.location.replace('/login');
 }
 
 export async function refreshAuthFromServer() {
   try {
-    const response = await fetch(apiUrl('/api/me'), {
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      clearAuthProfileLocal();
-      return getAuthSnapshot();
-    }
-
-    const data = await response.json();
+    const data = await apiJson<{ role: Role; name: string }>('/api/me');
     // Refresh local snapshot without dispatch to avoid listener loops.
     writeAuthProfile(data.role, data.name);
+    clearLoginRedirectLock();
     return getAuthSnapshot();
   } catch {
     clearAuthProfileLocal();
@@ -82,9 +91,3 @@ export async function refreshAuthFromServer() {
   }
 }
 
-export const withAuthFetch: RequestInit = {
-  credentials: 'include',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-};

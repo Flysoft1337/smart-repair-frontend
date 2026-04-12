@@ -1,42 +1,47 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { saveAuthProfile } from '@/lib/auth';
-import { apiUrl } from '@/lib/api';
+import { Role, refreshAuthFromServer, saveAuthProfile } from '@/lib/auth';
+import { apiJson } from '@/lib/api';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [username, setUsername] = useState('reporter');
   const [password, setPassword] = useState('reporter123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const autoEnter = async () => {
+      const snapshot = await refreshAuthFromServer();
+      if (snapshot.isAuthenticated && snapshot.role) {
+        window.location.replace('/');
+      }
+    };
+    void autoEnter();
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!username.trim() || !password.trim()) {
+      setError('请输入账号和密码。');
+      return;
+    }
     setLoading(true);
     setError('');
 
     try {
-      const res = await fetch(apiUrl('/api/login'), {
+      const data = await apiJson<{ role: Role; name: string }>('/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ username, password })
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        saveAuthProfile(data.role, data.name);
-        router.push('/');
-      } else {
-        const errData = await res.json();
-        setError(errData.error || '登录失败');
-      }
-    } catch {
-      setError('系统离线或网络错误');
+      saveAuthProfile(data.role, data.name);
+      window.location.replace('/');
+    } catch (error) {
+      setError(error instanceof Error ? error.message || '登录失败' : '登录失败');
     } finally {
       setLoading(false);
     }
@@ -78,7 +83,7 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || !username.trim() || !password.trim()}
             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white mt-2"
           >
             {loading ? '验证中...' : '登录系统'}
