@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Fullstack Dev" type="CompoundRunConfigurationType" factoryName="Compound">
+    <toRun name="Backend Dev" type="js.build_tools.npm" />
+    <toRun name="Frontend Dev" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>
+
