@@ -8,8 +8,8 @@ import { apiJson } from '@/lib/api';
 import { useEffect } from 'react';
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('reporter');
-  const [password, setPassword] = useState('reporter123');
+  const [username, setUsername] = useState('student');
+  const [password, setPassword] = useState('student123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -55,7 +55,7 @@ export default function LoginPage() {
             SR
           </div>
           <h1 className="text-2xl font-extrabold text-zinc-100">账号登录</h1>
-          <p className="text-sm text-zinc-400 mt-2">admin / worker / reporter 三种角色</p>
+          <p className="text-sm text-zinc-400 mt-2">学生 / 维修人员 / 系部管理 / 院部管理 / 总管理</p>
         </div>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
@@ -77,7 +77,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <p className="text-[11px] text-zinc-500">示例: admin/admin123, worker/worker123, reporter/reporter123</p>
+          <p className="text-[11px] text-zinc-500">示例: student/student123, worker/worker123, department/department123, college/college123, admin/admin123</p>
 
           {error && <div className="text-xs text-red-500 bg-red-500/10 p-2 rounded">{error}</div>}
 

@@ -1,4 +1,5 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
+import type { DragEvent, MouseEvent } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -18,8 +19,8 @@ type TicketCardProps = {
   note: string;
   onOpen: (id: number) => void;
   onToggleSelect: (id: number) => void;
-  onDelete: (e: React.MouseEvent, id: number) => void;
-  onDragStart: (e: React.DragEvent, id: number) => void;
+  onDelete: (e: MouseEvent, id: number) => void;
+  onDragStart: (e: DragEvent, id: number) => void;
   onDragEnd: () => void;
 };
 

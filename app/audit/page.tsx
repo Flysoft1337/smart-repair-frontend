@@ -120,7 +120,7 @@ export default function AuditPage() {
   };
 
   return (
-    <RoleGuard roles={['admin']}>
+    <RoleGuard roles={['college-admin', 'super-admin']}>
       <div className="p-8 w-full max-w-6xl mx-auto text-zinc-100">
         <header className="mb-6">
           <h1 className="text-3xl font-extrabold">操作审计</h1>
@@ -177,9 +177,11 @@ export default function AuditPage() {
                 className="h-10 rounded-md bg-zinc-950 border border-zinc-700 px-3 text-sm text-zinc-200"
               >
                 <option value="all">全部角色</option>
-                <option value="admin">ADMIN</option>
-                <option value="worker">WORKER</option>
-                <option value="reporter">REPORTER</option>
+                <option value="student">学生</option>
+                <option value="maintainer">维修人员</option>
+                <option value="department-admin">系部管理</option>
+                <option value="college-admin">院部管理</option>
+                <option value="super-admin">总管理</option>
               </select>
               <select
                 value={datePreset}

@@ -1,9 +1,10 @@
+import type { RefObject } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PriorityFilter, SortMode, StatusFilter } from '@/components/home/types';
 
 interface HubHeaderControlsProps {
-  searchInputRef: React.RefObject<HTMLInputElement | null>;
+  searchInputRef: RefObject<HTMLInputElement | null>;
   searchQuery: string;
   statusFilter: StatusFilter;
   priorityFilter: PriorityFilter;
@@ -142,4 +143,3 @@ export function HubHeaderControls({
     </header>
   );
 }
-

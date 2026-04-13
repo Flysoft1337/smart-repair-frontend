@@ -1,11 +1,12 @@
 "use client";
 
+import type { ReactNode } from 'react';
 import RoleGuard from '@/components/RoleGuard';
 
 interface AdminGuardProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function AdminGuard({ children }: AdminGuardProps) {
-  return <RoleGuard roles={["admin"]}>{children}</RoleGuard>;
+  return <RoleGuard roles={["super-admin"]}>{children}</RoleGuard>;
 }

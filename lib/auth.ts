@@ -3,7 +3,7 @@ import { apiJson } from '@/lib/api';
 export const AUTH_EVENT = 'auth_changed';
 const LOGIN_REDIRECT_KEY = 'sr_login_redirecting';
 
-export type Role = 'admin' | 'worker' | 'reporter';
+export type Role = 'student' | 'department-admin' | 'college-admin' | 'super-admin' | 'maintainer';
 
 export interface AuthSnapshot {
   role: Role | null;
@@ -50,9 +50,9 @@ export function getAuthSnapshot(): AuthSnapshot {
     role,
     name,
     isAuthenticated: Boolean(role),
-    isAdmin: role === 'admin',
-    isWorker: role === 'worker',
-    isReporter: role === 'reporter',
+    isAdmin: role === 'super-admin' || role === 'college-admin',
+    isWorker: role === 'maintainer',
+    isReporter: role === 'student',
   };
 }
 

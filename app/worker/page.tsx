@@ -8,7 +8,7 @@ export default function WorkerPage() {
   const worker = useWorkerTickets();
 
   return (
-    <RoleGuard roles={['admin', 'worker']}>
+    <RoleGuard roles={['department-admin', 'college-admin', 'super-admin', 'maintainer']}>
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-8 text-zinc-100">
         <WorkerPageHeader />
 

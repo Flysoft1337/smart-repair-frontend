@@ -1,8 +1,9 @@
+import type { RefObject } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 interface WorkerToolbarProps {
-  searchInputRef: React.RefObject<HTMLInputElement | null>;
+  searchInputRef: RefObject<HTMLInputElement | null>;
   query: string;
   onQueryChange: (value: string) => void;
   onRefresh: () => void;
@@ -24,4 +25,3 @@ export function WorkerToolbar({ searchInputRef, query, onQueryChange, onRefresh 
     </div>
   );
 }
-

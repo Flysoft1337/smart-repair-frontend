@@ -1,12 +1,13 @@
 "use client";
 
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { clearAuthProfile, refreshAuthFromServer, redirectToLogin, Role } from '@/lib/auth';
 import { useEffect, useMemo, useState } from 'react';
 
 interface RoleGuardProps {
   roles: Role[];
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 type GuardState =

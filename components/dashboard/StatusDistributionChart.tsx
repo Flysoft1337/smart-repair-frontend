@@ -12,7 +12,7 @@ export function StatusDistributionChart({ data }: StatusDistributionChartProps) 
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-zinc-300">工单状态分布</CardTitle>
       </CardHeader>
-      <CardContent className="flex h-75 items-center justify-center">
+      <CardContent className="flex h-[18.75rem] items-center justify-center">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie

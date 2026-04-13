@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import AdminGuard from '@/components/AdminGuard';
+import RoleGuard from '@/components/RoleGuard';
 import { fetchPriorityMode, updatePriorityMode } from '@/lib/services';
 
 export default function SettingsPage() {
@@ -77,7 +77,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <AdminGuard>
+    <RoleGuard roles={['college-admin', 'super-admin']}>
       <div className="p-8 font-sans w-full max-w-4xl mx-auto h-full text-zinc-100 flex flex-col">
         <header className="mb-8">
           <h1 className="text-3xl font-extrabold mb-2">系统设置</h1>
@@ -166,6 +166,6 @@ export default function SettingsPage() {
           </div>
         </section>
       </div>
-    </AdminGuard>
+    </RoleGuard>
   );
 }

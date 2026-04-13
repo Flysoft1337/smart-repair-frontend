@@ -70,7 +70,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <RoleGuard roles={['admin', 'worker']}>
+    <RoleGuard roles={['department-admin', 'college-admin', 'super-admin', 'maintainer']}>
       <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6 p-8 font-sans text-zinc-100">
         <DashboardHeader onOpenUrgent={openUrgentBoard} />
 

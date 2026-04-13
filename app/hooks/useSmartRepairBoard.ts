@@ -1,4 +1,5 @@
-import { Dispatch, RefObject, SetStateAction, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import type { Dispatch, DragEvent, MouseEvent, RefObject, SetStateAction, UIEvent } from 'react';
 import { AUTH_EVENT, Role, clearAuthProfile, refreshAuthFromServer, redirectToLogin } from '@/lib/auth';
 import { ApiError } from '@/lib/api';
 import { PriorityFilter, SortMode, StatusFilter, StatusKey, Ticket } from '@/components/home/types';
@@ -69,13 +70,13 @@ export interface UseSmartRepairBoardResult {
   handleSubmit: () => Promise<void>;
   handleBatchMove: (status: Ticket['status']) => Promise<void>;
   handleUndoBatch: () => Promise<void>;
-  handleDelete: (e: React.MouseEvent, id: number) => Promise<void>;
+  handleDelete: (e: MouseEvent, id: number) => Promise<void>;
   handleClearDone: () => Promise<void>;
-  onDrop: (e: React.DragEvent, status: Ticket['status']) => Promise<void>;
-  onDragOver: (e: React.DragEvent) => void;
-  onColumnScroll: (status: StatusKey, e: React.UIEvent<HTMLDivElement>) => void;
+  onDrop: (e: DragEvent, status: Ticket['status']) => Promise<void>;
+  onDragOver: (e: DragEvent) => void;
+  onColumnScroll: (status: StatusKey, e: UIEvent<HTMLDivElement>) => void;
   onToggleSelect: (ticketId: number) => void;
-  onDragStart: (e: React.DragEvent, id: number) => void;
+  onDragStart: (e: DragEvent, id: number) => void;
   onDragEnd: () => void;
 }
 
@@ -111,8 +112,8 @@ export function useSmartRepairBoard(): UseSmartRepairBoardResult {
     done: PAGE_SIZE,
   });
 
-  const canManageStatus = role === 'admin' || role === 'worker';
-  const canDelete = role === 'admin';
+  const canManageStatus = role === 'super-admin' || role === 'college-admin' || role === 'department-admin' || role === 'maintainer';
+  const canDelete = role === 'super-admin' || role === 'college-admin';
 
   const activeTicket = useMemo(
     () => tickets.find((ticket) => ticket.id === activeTicketId) ?? null,
@@ -249,7 +250,7 @@ export function useSmartRepairBoard(): UseSmartRepairBoardResult {
   }, [title, description, priority, fetchTickets, handleUnauthorized]);
 
   const handleDelete = useCallback(
-    async (e: React.MouseEvent, id: number) => {
+    async (e: MouseEvent, id: number) => {
       e.stopPropagation();
       if (!window.confirm('确定要删除这条报修记录吗？')) return;
 
@@ -311,7 +312,7 @@ export function useSmartRepairBoard(): UseSmartRepairBoardResult {
     }
   }, [tickets, activeTicket, handleUnauthorized]);
 
-  const handleDrop = useCallback(async (e: React.DragEvent, newStatus: Ticket['status']) => {
+  const handleDrop = useCallback(async (e: DragEvent, newStatus: Ticket['status']) => {
     e.preventDefault();
     setIsDragging(false);
     if (!canManageStatus) return;
@@ -331,7 +332,7 @@ export function useSmartRepairBoard(): UseSmartRepairBoardResult {
     }
   }, [canManageStatus, tickets, updateTicketStatus]);
 
-  const onColumnScroll = useCallback((status: StatusKey, e: React.UIEvent<HTMLDivElement>) => {
+  const onColumnScroll = useCallback((status: StatusKey, e: UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     const nearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 160;
     if (!nearBottom) return;
@@ -351,7 +352,7 @@ export function useSmartRepairBoard(): UseSmartRepairBoardResult {
     [canManageStatus]
   );
 
-  const onDragStart = useCallback((e: React.DragEvent, id: number) => {
+  const onDragStart = useCallback((e: DragEvent, id: number) => {
     e.dataTransfer.setData('ticketId', id.toString());
     setIsDragging(true);
   }, []);
@@ -360,7 +361,7 @@ export function useSmartRepairBoard(): UseSmartRepairBoardResult {
     setIsDragging(false);
   }, []);
 
-  const onDragOver = useCallback((e: React.DragEvent) => {
+  const onDragOver = useCallback((e: DragEvent) => {
     e.preventDefault();
   }, []);
 

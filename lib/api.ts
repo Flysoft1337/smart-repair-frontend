@@ -20,7 +20,7 @@ export function apiUrl(path: string): string {
   return `${API_BASE_URL}${path}`;
 }
 
-export function apiFetch(path: string, init: RequestInit = {}) {
+export function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   return fetch(apiUrl(path), {
     credentials: 'include',
     ...init,
@@ -39,6 +39,5 @@ export async function apiJson<T>(path: string, init: RequestInit = {}): Promise<
     throw new ApiError(response.status, message || `Request failed: ${response.status}`);
   }
 
-  return response.json() as Promise<T>;
+  return (await response.json()) as T;
 }
-

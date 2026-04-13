@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import type { DragEvent, MouseEvent, UIEvent } from 'react';
 import { TicketCard } from '@/components/tickets/TicketCard';
 import { PriorityFilter, StatusFilter, StatusKey, Ticket } from '@/components/home/types';
 
@@ -24,13 +25,13 @@ interface TicketBoardColumnsProps {
   debouncedQuery: string;
   statusFilter: StatusFilter;
   priorityFilter: PriorityFilter;
-  onDrop: (e: React.DragEvent, status: StatusKey) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onColumnScroll: (status: StatusKey, e: React.UIEvent<HTMLDivElement>) => void;
+  onDrop: (e: DragEvent, status: StatusKey) => void;
+  onDragOver: (e: DragEvent) => void;
+  onColumnScroll: (status: StatusKey, e: UIEvent<HTMLDivElement>) => void;
   onOpenTicket: (id: number) => void;
   onToggleSelect: (id: number) => void;
-  onDelete: (e: React.MouseEvent, id: number) => void;
-  onDragStart: (e: React.DragEvent, id: number) => void;
+  onDelete: (e: MouseEvent, id: number) => void;
+  onDragStart: (e: DragEvent, id: number) => void;
   onDragEnd: () => void;
   onClearDone: () => void;
 }

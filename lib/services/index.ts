@@ -22,3 +22,17 @@ export {
   type AuditLogsResponse,
 } from '@/lib/services/audit';
 
+export {
+  fetchUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  resetUserPassword,
+  importUsersCsv,
+  type ManagedUser,
+  type ManagedUserRole,
+  type UsersListResponse,
+  type UsersQuery,
+  type ImportUsersResponse,
+} from '@/lib/services/users';
+
