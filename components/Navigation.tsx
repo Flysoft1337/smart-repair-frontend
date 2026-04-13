@@ -10,7 +10,7 @@ import { apiJson } from '@/lib/api';
 
 const navItems: Array<{ href: string; icon: ComponentType<{ className?: string }>; label: string; roles: Role[] }> = [
   { href: '/', icon: ClipboardIcon, label: '工单看板', roles: ['student', 'department-admin', 'college-admin', 'super-admin', 'maintainer'] },
-  { href: '/users', icon: UsersIcon, label: '用户管理', roles: ['super-admin'] },
+  { href: '/users', icon: UsersIcon, label: '用户管理', roles: ['department-admin', 'college-admin', 'super-admin'] },
   { href: '/worker', icon: ClipboardIcon, label: '维修工作台', roles: ['department-admin', 'college-admin', 'super-admin', 'maintainer'] },
   { href: '/dashboard', icon: ChartBarIcon, label: '数据大盘', roles: ['department-admin', 'college-admin', 'super-admin', 'maintainer'] },
   { href: '/audit', icon: ChartBarIcon, label: '操作审计', roles: ['college-admin', 'super-admin'] },

@@ -35,7 +35,7 @@ export function TicketActionPanel({
   return (
     <section className="flex w-full flex-col gap-4 lg:w-1/4">
       <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-md">
-        <h2 className="mb-4 text-lg font-bold text-zinc-100 md:text-xl">一键报修</h2>
+        <h2 className="mb-4 text-lg font-bold text-zinc-100 md:text-xl">报修工单录入</h2>
 
         <div className="mb-6 flex flex-col gap-4">
           <div>
@@ -71,6 +71,7 @@ export function TicketActionPanel({
                 className="h-10 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-200"
               >
                 <option value="normal">普通</option>
+                <option value="high">较高</option>
                 <option value="urgent">紧急</option>
               </select>
             </div>
@@ -85,7 +86,7 @@ export function TicketActionPanel({
           disabled={isSubmitting || !title.trim() || !description.trim()}
           className="w-full bg-indigo-600 font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? '正在提交...' : '立即提交报修'}
+          {isSubmitting ? '正在提交...' : '提交报修工单'}
         </Button>
         <p className="mt-2 text-[11px] text-zinc-500">快捷键: 在描述框按 Ctrl + Enter 快速提交</p>
       </div>

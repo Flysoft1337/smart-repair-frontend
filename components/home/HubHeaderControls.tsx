@@ -94,6 +94,7 @@ export function HubHeaderControls({
           >
             <option value="all">全部优先级</option>
             <option value="urgent">紧急</option>
+            <option value="high">较高</option>
             <option value="normal">普通</option>
           </select>
 
@@ -104,7 +105,7 @@ export function HubHeaderControls({
           >
             <option value="newest">最新优先</option>
             <option value="oldest">最早优先</option>
-            <option value="priority">紧急优先</option>
+            <option value="priority">优先级优先</option>
           </select>
 
           <Button

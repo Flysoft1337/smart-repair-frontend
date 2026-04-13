@@ -23,6 +23,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 bun-error.log*
+build-output.log
 
 # misc
 .DS_Store

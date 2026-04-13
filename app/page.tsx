@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui';
 import { HubHeaderControls, TicketActionPanel, TicketBoardColumns, TicketDetailModal } from '@/components/home';
-import { useSmartRepairBoard } from '@/app/hooks/useSmartRepairBoard';
+import { useSmartRepairBoard } from '@/app/hooks';
 
 export default function SmartRepairHub() {
   const board = useSmartRepairBoard();

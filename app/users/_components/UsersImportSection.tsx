@@ -26,7 +26,7 @@ export default function UsersImportSection({
     <section className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
       <h2 className="mb-3 text-sm font-semibold text-zinc-300">批量导入（CSV）</h2>
       <p className="mb-2 text-xs text-zinc-500">
-        表头必须为: username,name,role,password。role 可填: student,department-admin,college-admin,super-admin,maintainer
+        表头必须为: username,name,role,password。可选列: collegeCode,departmentCode（学生/系部管理建议提供 departmentCode）
       </p>
       <input
         type="file"

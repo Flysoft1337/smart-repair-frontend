@@ -8,5 +8,5 @@ interface AdminGuardProps {
 }
 
 export default function AdminGuard({ children }: AdminGuardProps) {
-  return <RoleGuard roles={["super-admin"]}>{children}</RoleGuard>;
+  return <RoleGuard roles={["super-admin", "college-admin", "department-admin"]}>{children}</RoleGuard>;
 }

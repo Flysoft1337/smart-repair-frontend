@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
-import RoleGuard from '@/components/RoleGuard';
+import { useEffect, useMemo, useState } from 'react';
+import { RoleGuard } from '@/components/guards';
 import { clearAuthProfile, redirectToLogin } from '@/lib/auth';
 import { ApiError, apiJson } from '@/lib/api';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { KpiCards } from '@/components/dashboard/KpiCards';
-import { StatusDistributionChart } from '@/components/dashboard/StatusDistributionChart';
-import { RecentUrgentList } from '@/components/dashboard/RecentUrgentList';
-import { DashboardEmptyState } from '@/components/dashboard/DashboardEmptyState';
-import { AnalyticsData, TicketLite, Trend } from '@/components/dashboard/types';
+import {
+  DashboardEmptyState,
+  DashboardHeader,
+  KpiCards,
+  RecentUrgentList,
+  StatusDistributionChart,
+} from '@/components/dashboard';
+import type { AnalyticsData, TicketLite, Trend } from '@/components/dashboard';
 
 export default function DashboardPage() {
   const [data, setData] = useState<AnalyticsData>({

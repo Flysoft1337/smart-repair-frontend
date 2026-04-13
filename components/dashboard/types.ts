@@ -10,7 +10,7 @@ export interface AnalyticsData {
 export interface TicketLite {
   id: number;
   title: string;
-  priority: 'urgent' | 'normal';
+  priority: 'urgent' | 'high' | 'normal';
   status: 'todo' | 'in-progress' | 'done';
   createdAt: string;
 }

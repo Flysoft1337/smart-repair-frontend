@@ -7,7 +7,11 @@ export function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 export function sortTickets(tickets: Ticket[], sortMode: 'newest' | 'oldest' | 'priority'): Ticket[] {
-  const priorityWeight = (value: Ticket['priority']) => (value === 'urgent' ? 2 : 1);
+  const priorityWeight = (value: Ticket['priority']) => {
+    if (value === 'urgent') return 3;
+    if (value === 'high') return 2;
+    return 1;
+  };
   const next = [...tickets];
 
   next.sort((a, b) => {

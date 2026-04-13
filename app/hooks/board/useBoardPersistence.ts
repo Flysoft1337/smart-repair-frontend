@@ -52,7 +52,7 @@ export function useBoardPersistence({
       if (status === 'todo' || status === 'in-progress' || status === 'done') {
         setStatusFilter(status);
       }
-      if (priorityFromUrl === 'urgent' || priorityFromUrl === 'normal') {
+      if (priorityFromUrl === 'urgent' || priorityFromUrl === 'high' || priorityFromUrl === 'normal') {
         setPriorityFilter(priorityFromUrl);
       }
 

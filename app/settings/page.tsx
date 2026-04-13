@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import RoleGuard from '@/components/RoleGuard';
+import { RoleGuard } from '@/components/guards';
 import { fetchPriorityMode, updatePriorityMode } from '@/lib/services';
 
 export default function SettingsPage() {

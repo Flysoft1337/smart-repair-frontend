@@ -8,6 +8,8 @@ export type Role = 'student' | 'department-admin' | 'college-admin' | 'super-adm
 export interface AuthSnapshot {
   role: Role | null;
   name: string | null;
+  collegeId: number | null;
+  departmentId: number | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
   isWorker: boolean;
@@ -16,15 +18,23 @@ export interface AuthSnapshot {
 
 const ROLE_KEY = 'sr_role';
 const NAME_KEY = 'sr_name';
+const COLLEGE_ID_KEY = 'sr_college_id';
+const DEPARTMENT_ID_KEY = 'sr_department_id';
 
-function writeAuthProfile(role: Role, name: string) {
+function writeAuthProfile(role: Role, name: string, collegeId: number | null = null, departmentId: number | null = null) {
   localStorage.setItem(ROLE_KEY, role);
   localStorage.setItem(NAME_KEY, name);
+  if (collegeId === null) localStorage.removeItem(COLLEGE_ID_KEY);
+  else localStorage.setItem(COLLEGE_ID_KEY, String(collegeId));
+  if (departmentId === null) localStorage.removeItem(DEPARTMENT_ID_KEY);
+  else localStorage.setItem(DEPARTMENT_ID_KEY, String(departmentId));
 }
 
 function clearAuthProfileLocal() {
   localStorage.removeItem(ROLE_KEY);
   localStorage.removeItem(NAME_KEY);
+  localStorage.removeItem(COLLEGE_ID_KEY);
+  localStorage.removeItem(DEPARTMENT_ID_KEY);
 }
 
 function clearLoginRedirectLock() {
@@ -36,6 +46,8 @@ export function getAuthSnapshot(): AuthSnapshot {
     return {
       role: null,
       name: null,
+      collegeId: null,
+      departmentId: null,
       isAuthenticated: false,
       isAdmin: false,
       isWorker: false,
@@ -45,10 +57,16 @@ export function getAuthSnapshot(): AuthSnapshot {
 
   const role = localStorage.getItem(ROLE_KEY) as Role | null;
   const name = localStorage.getItem(NAME_KEY);
+  const collegeIdRaw = localStorage.getItem(COLLEGE_ID_KEY);
+  const departmentIdRaw = localStorage.getItem(DEPARTMENT_ID_KEY);
+  const collegeId = collegeIdRaw ? Number(collegeIdRaw) : null;
+  const departmentId = departmentIdRaw ? Number(departmentIdRaw) : null;
 
   return {
     role,
     name,
+    collegeId: Number.isFinite(collegeId) ? collegeId : null,
+    departmentId: Number.isFinite(departmentId) ? departmentId : null,
     isAuthenticated: Boolean(role),
     isAdmin: role === 'super-admin' || role === 'college-admin',
     isWorker: role === 'maintainer',
@@ -56,8 +74,8 @@ export function getAuthSnapshot(): AuthSnapshot {
   };
 }
 
-export function saveAuthProfile(role: Role, name: string) {
-  writeAuthProfile(role, name);
+export function saveAuthProfile(role: Role, name: string, collegeId: number | null = null, departmentId: number | null = null) {
+  writeAuthProfile(role, name, collegeId, departmentId);
   clearLoginRedirectLock();
   window.dispatchEvent(new Event(AUTH_EVENT));
 }
@@ -80,9 +98,9 @@ export function redirectToLogin(force = false) {
 
 export async function refreshAuthFromServer() {
   try {
-    const data = await apiJson<{ role: Role; name: string }>('/api/me');
+    const data = await apiJson<{ role: Role; name: string; collegeId?: number | null; departmentId?: number | null }>('/api/me');
     // Refresh local snapshot without dispatch to avoid listener loops.
-    writeAuthProfile(data.role, data.name);
+    writeAuthProfile(data.role, data.name, data.collegeId ?? null, data.departmentId ?? null);
     clearLoginRedirectLock();
     return getAuthSnapshot();
   } catch {

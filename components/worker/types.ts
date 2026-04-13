@@ -3,7 +3,7 @@ export type WorkerTicket = {
   title: string;
   description: string;
   status: 'todo' | 'in-progress' | 'done';
-  priority: 'urgent' | 'normal';
+  priority: 'urgent' | 'high' | 'normal';
   createdAt: string;
 };
 

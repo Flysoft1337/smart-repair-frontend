@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { DragEvent, MouseEvent, UIEvent } from 'react';
-import { TicketCard } from '@/components/tickets/TicketCard';
+import { TicketCard } from '@/components/tickets';
 import { PriorityFilter, StatusFilter, StatusKey, Ticket } from '@/components/home/types';
 
 interface BoardStats {
@@ -114,7 +114,7 @@ export function TicketBoardColumns({
         onDrop={(e) => onDrop(e, 'todo')}
         className={`flex h-full max-h-[80vh] flex-col rounded-xl border bg-zinc-900/80 p-4 shadow-inner transition-colors ${isDragging ? 'border-zinc-700/80' : 'border-zinc-800/80'}`}
       >
-        <div className="sticky top-0 z-10 mb-4 flex items-center justify-between bg-transparent px-1">
+        <div className="sticky top-0 z-10 mb-4 flex h-9 items-center justify-between bg-transparent px-1">
           <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-zinc-300">
             <span className="inline-block h-2 w-2 rounded-full bg-zinc-500 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"></span>
             待处理
@@ -131,7 +131,7 @@ export function TicketBoardColumns({
         onDrop={(e) => onDrop(e, 'in-progress')}
         className={`flex h-full max-h-[80vh] flex-col rounded-xl border bg-zinc-900/80 p-4 shadow-inner transition-colors ${isDragging ? 'border-blue-900/50' : 'border-zinc-800/80'}`}
       >
-        <div className="sticky top-0 z-10 mb-4 flex items-center justify-between bg-transparent px-1">
+        <div className="sticky top-0 z-10 mb-4 flex h-9 items-center justify-between bg-transparent px-1">
           <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-zinc-300">
             <span className="inline-block h-2 w-2 rounded-full bg-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
             维修中
@@ -148,7 +148,7 @@ export function TicketBoardColumns({
         onDrop={(e) => onDrop(e, 'done')}
         className={`flex h-full max-h-[80vh] flex-col rounded-xl border bg-zinc-900/80 p-4 shadow-inner transition-colors ${isDragging ? 'border-green-900/50' : 'border-zinc-800/80'}`}
       >
-        <div className="sticky top-0 z-10 mb-4 flex items-center justify-between bg-transparent px-1">
+        <div className="sticky top-0 z-10 mb-4 flex h-9 items-center justify-between bg-transparent px-1">
           <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-zinc-300">
             <span className="inline-block h-2 w-2 rounded-full bg-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
             已完成
@@ -158,7 +158,7 @@ export function TicketBoardColumns({
             {canDelete && hasDoneTickets && (
               <button
                 onClick={onClearDone}
-                className="rounded p-1.5 text-xs text-zinc-500 opacity-70 transition-colors hover:bg-zinc-800 hover:text-red-400 hover:opacity-100"
+                className="inline-flex h-7 w-7 items-center justify-center rounded text-xs text-zinc-500 opacity-70 transition-colors hover:bg-zinc-800 hover:text-red-400 hover:opacity-100"
                 title="清空所有已完成工单"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

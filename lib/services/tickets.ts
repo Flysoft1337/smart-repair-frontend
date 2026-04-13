@@ -3,13 +3,13 @@ import { apiJson } from '@/lib/api';
 export interface TicketQuery {
   q?: string;
   status?: 'todo' | 'in-progress' | 'done';
-  priority?: 'urgent' | 'normal';
+  priority?: 'urgent' | 'high' | 'normal';
 }
 
 export interface CreateTicketPayload {
   title: string;
   description: string;
-  priority: 'urgent' | 'normal';
+  priority: 'urgent' | 'high' | 'normal';
 }
 
 export async function fetchTickets<TTicket>(query: TicketQuery = {}): Promise<TTicket[]> {

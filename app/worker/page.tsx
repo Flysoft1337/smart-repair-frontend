@@ -1,8 +1,8 @@
 "use client";
 
-import RoleGuard from '@/components/RoleGuard';
+import { RoleGuard } from '@/components/guards';
 import { WorkerPageHeader, WorkerStatusColumn, WorkerToolbar } from '@/components/worker';
-import { useWorkerTickets } from '@/app/hooks/useWorkerTickets';
+import { useWorkerTickets } from '@/app/hooks';
 
 export default function WorkerPage() {
   const worker = useWorkerTickets();

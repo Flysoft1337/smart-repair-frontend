@@ -33,8 +33,8 @@
   - App Router 页面与布局
   - 主要页面：`/`、`/login`、`/dashboard`、`/users`、`/settings`、`/audit`、`/worker`
 - `components/`
-  - `ui/`: shadcn 风格基础组件
-  - `home/`: 看板页面领域组件
+  - `ui/`: shadcn 基础组件
+  - `home/`: 看板页面组件
   - `dashboard/`: 数据大盘组件
   - `worker/`: 维修工作台组件
   - `Navigation.tsx`、`RoleGuard.tsx`、`AdminGuard.tsx`
@@ -42,173 +42,129 @@
   - 复杂页面状态编排（如 `useSmartRepairBoard`）
 - `lib/`
   - `api.ts`: fetch 基础封装
-  - `auth.ts`: 鉴权快照与登录跳转控制
-  - `services/`: 面向业务域的 API 调用层（tickets/users/audit/settings）
+  - `auth.ts`: 鉴权快照（含组织归属）与跳转控制
+  - `services/`: 业务 API 封装（tickets/users/audit/settings）
 
-## 4. 路由与信息架构（App Router）
-
-### 4.1 全局布局
-
-- `app/layout.tsx`
-  - 注入全局字体、全局样式
-  - 注入导航 `Navigation`
-  - 负责页面主内容区域布局（侧边栏 + 主内容）
-
-### 4.2 功能页面
+## 4. 路由与信息架构
 
 - `app/page.tsx`: 工单看板主界面
 - `app/login/page.tsx`: 登录入口
 - `app/dashboard/page.tsx`: 统计大盘
-- `app/users/page.tsx`: 用户管理
+- `app/users/page.tsx`: 用户管理（组织树 + 表格）
 - `app/settings/page.tsx`: 系统设置
 - `app/audit/page.tsx`: 审计查询
 - `app/worker/page.tsx`: 维修工作台
 
 ## 5. UI 体系与设计结构
 
-### 5.1 基础组件层
-
-- `components/ui/*`
-  - `Button`、`Card`、`Badge`、`Input`、`Textarea`
-  - 采用 `class-variance-authority` 管理变体
-
-### 5.2 业务组件层
-
-- 看板：`TicketActionPanel`、`TicketBoardColumns`、`TicketDetailModal`
-- 导航：`Navigation`
-- 权限：`RoleGuard`、`AdminGuard`
-- 图表：`StatusDistributionChart`、`KpiCards` 等
-
-### 5.3 图标层
-
-- `components/icons.tsx`
-  - 使用内联 SVG 图标
-  - 不依赖外部图标运行时
+- 基础组件：`components/ui/*`
+- 看板组件：`TicketActionPanel`、`TicketBoardColumns`、`TicketDetailModal`
+- 权限组件：`RoleGuard`、`AdminGuard`
+- 图标：`components/icons.tsx`（内联 SVG，不依赖第三方图标运行时）
 
 ## 6. 数据访问层结构
 
 ### 6.1 基础请求层（`lib/api.ts`）
 
-- `API_BASE_URL`
-  - 来自 `NEXT_PUBLIC_API_BASE_URL`
-  - 默认回退 `http://localhost:8080`
-- `apiFetch`
-  - 统一设置 `credentials: include`
-  - 统一默认 `Content-Type: application/json`
-- `apiJson<T>`
-  - 统一响应状态检查
-  - 非 2xx 抛出 `ApiError`
+- `API_BASE_URL`：来自 `NEXT_PUBLIC_API_BASE_URL`，默认 `http://localhost:8080`
+- `apiFetch`：统一 `credentials: include`
+- `apiJson<T>`：统一错误处理并抛出 `ApiError`
 
 ### 6.2 业务服务层（`lib/services/*`）
 
-按业务域拆分：
-
 - `tickets`: 工单 CRUD、状态更新、清空完成
-- `users`: 用户列表、创建、编辑、删除、重置密码、CSV 导入
+- `users`: 用户列表、创建、编辑、删除、重置密码、CSV 导入、组织树
 - `audit`: 审计日志查询
 - `settings`: 优先级模式读取与更新
-
-这层将页面逻辑与 HTTP 细节解耦。
 
 ## 7. 鉴权与权限模型
 
 ### 7.1 前端鉴权快照
 
-`lib/auth.ts` 通过本地存储维护基础信息：
+`lib/auth.ts` 持久化并广播：
 
 - `sr_role`
 - `sr_name`
+- `sr_college_id`
+- `sr_department_id`
 
-并通过 `AUTH_EVENT` 广播状态变化。
+通过 `AUTH_EVENT` 通知 UI 更新。
 
-### 7.2 服务端校验回源
+### 7.2 服务端回源校正
 
 - `refreshAuthFromServer` 调用 `/api/me`
-- 用于纠正本地快照，避免“仅靠本地缓存”带来的权限漂移
+- 用于修正本地角色与组织归属快照
 
-### 7.3 跳转控制
+### 7.3 页面守卫
 
-- `redirectToLogin(force?)`
-  - 避免重复跳转
-  - 可强制跳转
+- `RoleGuard`：角色集合守卫
+- `AdminGuard`：用户管理页面守卫（`super-admin` / `college-admin` / `department-admin`）
 
-### 7.4 页面守卫
+## 8. 用户管理页（`/users`）结构
 
-- `RoleGuard` 根据目标角色集合控制页面可见性
-- `AdminGuard` 是 `RoleGuard` 的超管特化封装
+用户管理采用“组织树 + 数据表”双视图：
 
-## 8. 看板页（`/`）状态编排结构
+- 组织树（院部 > 系部）
+  - 关键字筛选（调用 `GET /api/org/tree?q=`）
+  - 展开/收起状态本地持久化
+  - 节点点击联动右侧表格筛选（院/系/角色）
+- 用户表格
+  - 分页、搜索、角色筛选
+  - 新增/编辑时支持 `collegeId`、`departmentId`
+  - 批量改角色、批量删除
+- CSV 导入
+  - 支持 `collegeCode` / `departmentCode`
+  - 预检（dry-run）+ 正式导入（commit）
+
+## 9. 看板页（`/`）状态编排
 
 看板采用“主 Hook + 组件拆分”模式：
 
 - `useSmartRepairBoard`
-  - 管理请求、筛选、排序、拖拽、批量操作、自动刷新、错误态
 - `TicketActionPanel`
-  - 提交工单与批量动作
 - `TicketBoardColumns`
-  - 三列看板渲染、滚动分页、拖拽落位
 - `TicketDetailModal`
-  - 工单详情与备注
 
-该结构降低了 `app/page.tsx` 复杂度，便于后续扩展。
+并支持拖拽状态流转、多选批量操作、自动刷新、错误重试。
 
-## 9. 状态与交互模式
-
-### 9.1 请求状态
-
-- `isLoading`、`isSubmitting`
-- 错误提示支持重试
-
-### 9.2 列表交互
-
-- 搜索/筛选/排序
-- 拖拽状态流转
-- 多选批量状态更新 + 撤销
-- 自动刷新开关
-
-### 9.3 权限交互
-
-- 无权限操作时显示轻量提示
-- 未登录触发登录页跳转
-
-## 10. 样式与主题结构
+## 10. 样式与主题
 
 - 全局样式：`app/globals.css`
-- 主题变量：通过 `@theme inline` 与 CSS 变量管理
-- 页面主风格：深色极简看板（`zinc` 色阶）
+- 主题变量：`@theme inline` + CSS 变量
+- 页面风格：深色极简（`zinc` 色阶）
+- 路由过渡：`app/template.tsx` + `page-transition`
 
 ## 11. 前后端联调约束
 
-- 前端默认端口：`3000`
-- 后端默认端口：`8080`
-- 请求基地址：`NEXT_PUBLIC_API_BASE_URL`
-- 认证方式：Cookie Session（前端必须 `credentials: include`）
+- 前端端口：`3000`
+- 后端端口：`8080`
+- 请求基址：`NEXT_PUBLIC_API_BASE_URL`
+- 认证：Cookie Session（必须 `credentials: include`）
 
-## 12. 当前架构特征与演进建议
+## 12. 当前特征与后续建议
 
 当前特征：
 
-- 页面与业务组件已分层
-- 服务层已抽象，复用度较高
-- 权限控制路径清晰
+- 页面与业务组件分层明确
+- 用户管理已支持校园层级组织视图
+- 服务层复用较好，权限控制路径清晰
 
-建议演进方向：
+建议演进：
 
-1. 继续细分 `app/hooks/board` 子模块（请求逻辑 vs 交互逻辑）
-2. 为服务层补充更严格的响应类型定义
-3. 对高复杂页面补充组件级测试（优先看板、用户管理）
-4. 增加 API 错误码映射，统一用户提示文案
+1. 用户管理页拆分成更细粒度组件（组织树/表格/工具栏）
+2. 增加组织树虚拟滚动（大规模院系/学生）
+3. 为关键页面补充组件级测试
+4. 为服务层补充更细错误码映射
 
-## 13. 快速启动命令
+## 13. 快速启动
 
 ```bash
 npm install
 npm run dev
 ```
 
-如需指定后端地址，请配置 `.env.local`：
+如需指定后端地址：
 
 ```bash
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
 ```
-

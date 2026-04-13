@@ -38,7 +38,9 @@ export function WorkerStatusColumn({
               <p className="mt-1 text-sm text-zinc-400">{ticket.description}</p>
               <div className="mt-3 flex items-center justify-between">
                 {showPriority ? (
-                  <span className="text-xs text-zinc-500">优先级: {ticket.priority === 'urgent' ? '紧急' : '普通'}</span>
+                  <span className="text-xs text-zinc-500">
+                    优先级: {ticket.priority === 'urgent' ? '紧急' : ticket.priority === 'high' ? '较高' : '普通'}
+                  </span>
                 ) : (
                   <span className="text-xs text-zinc-500">{new Date(ticket.createdAt).toLocaleString('zh-CN')}</span>
                 )}
