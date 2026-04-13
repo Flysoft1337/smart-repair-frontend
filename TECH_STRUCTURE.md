@@ -108,6 +108,7 @@
   - 关键字筛选（调用 `GET /api/org/tree?q=`）
   - 展开/收起状态本地持久化
   - 节点点击联动右侧表格筛选（院/系/角色）
+  - 按权限新增院部/系部（调用 `POST /api/org/colleges`、`POST /api/org/departments`）
 - 用户表格
   - 分页、搜索、角色筛选
   - 新增/编辑时支持 `collegeId`、`departmentId`

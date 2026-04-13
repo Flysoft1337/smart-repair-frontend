@@ -140,3 +140,18 @@ export function fetchOrgTree(query: { q?: string } = {}) {
   const suffix = params.toString();
   return apiJson<OrgTreeResponse>(`/api/org/tree${suffix ? `?${suffix}` : ''}`);
 }
+
+export function createCollege(payload: { name: string; code: string }) {
+  return apiJson<OrgCollege>('/api/org/colleges', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function createDepartment(payload: { name: string; code: string; collegeId?: number }) {
+  return apiJson<OrgDepartment>('/api/org/departments', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+

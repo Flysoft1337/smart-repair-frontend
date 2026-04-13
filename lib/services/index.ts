@@ -25,6 +25,8 @@ export {
 export {
   fetchUsers,
   createUser,
+  createCollege,
+  createDepartment,
   updateUser,
   deleteUser,
   fetchOrgTree,

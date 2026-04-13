@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import UsersCreateSection from '@/app/users/_components/UsersCreateSection';
 import UsersImportSection from '@/app/users/_components/UsersImportSection';
 import {
+  createCollege,
+  createDepartment,
   createUser,
   deleteUser,
   fetchOrgTree,
@@ -84,6 +86,12 @@ export default function UsersPage() {
   const [orgTreeQueryInput, setOrgTreeQueryInput] = useState('');
   const [orgTreeQuery, setOrgTreeQuery] = useState('');
   const [expandedCollegeIds, setExpandedCollegeIds] = useState<Set<number>>(new Set());
+  const [newCollegeName, setNewCollegeName] = useState('');
+  const [newCollegeCode, setNewCollegeCode] = useState('');
+  const [newDepartmentName, setNewDepartmentName] = useState('');
+  const [newDepartmentCode, setNewDepartmentCode] = useState('');
+  const [newDepartmentCollegeId, setNewDepartmentCollegeId] = useState<number | null>(null);
+  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
 
   const [draft, setDraft] = useState<DraftUser>(EMPTY_DRAFT);
   const [creating, setCreating] = useState(false);
@@ -201,6 +209,16 @@ export default function UsersPage() {
       setBatchRole(roleOptions[0].value);
     }
   }, [roleOptions, batchRole]);
+
+  useEffect(() => {
+    if (myRole === 'college-admin' && myCollegeId) {
+      setNewDepartmentCollegeId(myCollegeId);
+      return;
+    }
+    if (newDepartmentCollegeId === null && colleges.length > 0) {
+      setNewDepartmentCollegeId(colleges[0].id);
+    }
+  }, [myRole, myCollegeId, colleges, newDepartmentCollegeId]);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -464,6 +482,63 @@ export default function UsersPage() {
     await loadUsers();
   };
 
+  const handleCreateCollege = async () => {
+    if (!newCollegeName.trim() || !newCollegeCode.trim()) return;
+    setIsCreatingOrg(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await createCollege({
+        name: newCollegeName.trim(),
+        code: newCollegeCode.trim().toUpperCase(),
+      });
+      setNewCollegeName('');
+      setNewCollegeCode('');
+      setMessage('院部创建成功。');
+      await loadMeta();
+      await loadUsers();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearAuthProfile();
+        redirectToLogin();
+        return;
+      }
+      setError('院部创建失败：编码可能已存在或权限不足。');
+    } finally {
+      setIsCreatingOrg(false);
+    }
+  };
+
+  const handleCreateDepartment = async () => {
+    if (!newDepartmentName.trim() || !newDepartmentCode.trim()) return;
+    if (newDepartmentCollegeId === null) return;
+
+    setIsCreatingOrg(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await createDepartment({
+        name: newDepartmentName.trim(),
+        code: newDepartmentCode.trim().toUpperCase(),
+        collegeId: newDepartmentCollegeId,
+      });
+      setNewDepartmentName('');
+      setNewDepartmentCode('');
+      setMessage('系部创建成功。');
+      await loadMeta();
+      await loadUsers();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        clearAuthProfile();
+        redirectToLogin();
+        return;
+      }
+      setError('系部创建失败：编码可能已存在、院部无效或权限不足。');
+    } finally {
+      setIsCreatingOrg(false);
+    }
+  };
+
   const usersByCollege = useMemo(() => {
     const map = new Map<number, ManagedUser[]>();
     for (const user of users) {
@@ -508,6 +583,9 @@ export default function UsersPage() {
       return next;
     });
   };
+
+  const canCreateCollege = myRole === 'super-admin';
+  const canCreateDepartment = myRole === 'super-admin' || myRole === 'college-admin';
 
   return (
     <AdminGuard>
@@ -561,6 +639,82 @@ export default function UsersPage() {
               {roleFilter === 'all' ? '全部角色' : ROLE_LABEL[roleFilter]}
             </span>
           </div>
+
+          {(canCreateCollege || canCreateDepartment) && (
+            <div className="mb-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
+              {canCreateCollege && (
+                <div className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">
+                  <p className="mb-2 text-xs font-medium text-zinc-300">新增院部</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Input
+                      value={newCollegeName}
+                      onChange={(e) => setNewCollegeName(e.target.value)}
+                      placeholder="院部名称"
+                      className="h-8 w-40 border-zinc-700 bg-zinc-950 text-xs"
+                    />
+                    <Input
+                      value={newCollegeCode}
+                      onChange={(e) => setNewCollegeCode(e.target.value.toUpperCase())}
+                      placeholder="院部编码"
+                      className="h-8 w-28 border-zinc-700 bg-zinc-950 text-xs uppercase"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 bg-indigo-600 px-3 text-xs hover:bg-indigo-500"
+                      disabled={isCreatingOrg || !newCollegeName.trim() || !newCollegeCode.trim()}
+                      onClick={() => void handleCreateCollege()}
+                    >
+                      创建
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {canCreateDepartment && (
+                <div className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">
+                  <p className="mb-2 text-xs font-medium text-zinc-300">新增系部</p>
+                  <div className="flex flex-wrap gap-2">
+                    <select
+                      value={newDepartmentCollegeId ?? ''}
+                      onChange={(e) => setNewDepartmentCollegeId(e.target.value ? Number(e.target.value) : null)}
+                      disabled={myRole === 'college-admin'}
+                      className="h-8 rounded-md border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-200 disabled:opacity-50"
+                    >
+                      <option value="">选择院部</option>
+                      {colleges.map((college) => (
+                        <option key={college.id} value={college.id}>{college.name}</option>
+                      ))}
+                    </select>
+                    <Input
+                      value={newDepartmentName}
+                      onChange={(e) => setNewDepartmentName(e.target.value)}
+                      placeholder="系部名称"
+                      className="h-8 w-36 border-zinc-700 bg-zinc-950 text-xs"
+                    />
+                    <Input
+                      value={newDepartmentCode}
+                      onChange={(e) => setNewDepartmentCode(e.target.value.toUpperCase())}
+                      placeholder="系部编码"
+                      className="h-8 w-28 border-zinc-700 bg-zinc-950 text-xs uppercase"
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 bg-indigo-600 px-3 text-xs hover:bg-indigo-500"
+                      disabled={
+                        isCreatingOrg ||
+                        newDepartmentCollegeId === null ||
+                        !newDepartmentName.trim() ||
+                        !newDepartmentCode.trim()
+                      }
+                      onClick={() => void handleCreateDepartment()}
+                    >
+                      创建
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {colleges.map((college) => {
